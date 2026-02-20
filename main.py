@@ -9,42 +9,47 @@ import sys
 import logging as log
 import argparse
 
-# Set working directory to script location
-os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))
-
-# Variables
-os.environ["RUUVI_BLE_ADAPTER"] = "bleak"   
-TARGET_MAC = os.environ["RUUVITAG_MAC"]     # export RUUVITAG_MAC="CF:21:C3:AB:BD:C1" tai muu MAC-osoite
-DB_PATH = Path('data/data.db')              # Database location
+os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))        # Set working directory to script location
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")    # -v / --verbose for verbose logging
-parser.add_argument("-vvvv", "--superverbosemode", action="store_true", help="SUPER VERBOSE mode (debugging)")    # -vvvv / --superverbosemode for debug logging
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")        # -v / --verbose for verbose logging
+parser.add_argument("-d", "--debug", action="store_true", help="Debugging mode")        # -vvvv / --superverbosemode for debug logging
+parser.add_argument("-s", "--run-once", action="store_true", help="Log data once.")     # -s / --run-once for single log
+parser.add_argument("-a", "--mac-address", help="Use specific MAC-address")             # -s / --run-once for single log
 args = parser.parse_args()
 
-if args.verbose:
-    log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
-    log.basicConfig(level=log.INFO)
-    log.info("Verbose mode enabled.")
-if args.superverbosemode:
+DB_PATH = Path('data/data.db')                  # Database location
+os.environ["RUUVI_BLE_ADAPTER"] = "bleak"       # BLE adapter
+
+# Configure logging once based on args
+if args.debug:
     log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
-    log.basicConfig(level=log.DEBUG)
-    log.info("Super verbose mode enabled.")
+    log.info("Debug mode enabled.")
+elif args.verbose:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
+    log.info("Verbose mode enabled.")
 else:
     log.basicConfig(format='', level=log.ERROR)
-    
 
-async def main():       
+# Determine target MAC, CLI flag takes precedence over environment variable
+try:
+    TARGET_MAC = args.mac_address if args.mac_address else os.getenv("RUUVITAG_MAC")
+except:
+    log.critical("RUUVITAG_MAC environment variable not found and --mac-address not provided.")
+    sys.exit(1)
+
+async def main():              
     time = datetime.now(timezone.utc).isoformat()
     try:
-        async for mac, data in RuuviTagSensor.get_data_async():
-            mac = TARGET_MAC                    # Ruuvitag MAC address
-            tempc = data['temperature']         # Celsius
-            humidity = data['humidity']         # Percentage
-            pressure = data['pressure']         # hPa
-            battery = data['battery']           # Millivolts
-            log.info(f"{mac}, {tempc}c, {humidity}%, {pressure} hPa, {battery} mV")
+        async for mac, data in RuuviTagSensor.get_data_async(macs=TARGET_MAC):
+            tempc = data['temperature']         # Temperature in Celsius
+            humidity = data['humidity']         # Humidity in Percentage
+            pressure = data['pressure']         # Pressure in hPa
+            battery = data['battery']           # Voltage in Millivolts
+            log.info(f"Ruuvitag ({mac}) returned:\nTemperature: {tempc} Celsius\nHumidity: {humidity} %\nPressure: {pressure} hPa\nBattery: {battery} mV\n")
             write_to_db(time,mac,tempc,humidity,pressure,battery)
+            if bool(args.run_once) == True:     # Break out of loop if -s / -run-once argument is set
+                break
     except Exception as e:
         log.error(f"Error: {e}")
 
@@ -67,13 +72,10 @@ def init_db():
         battery REAL NOT NULL)
         ''')
     con.commit()
-    con.close
+    con.close()
     log.info(f'Created {DB_PATH}')
     
-def write_to_db(time, mac, tempc, humidity, pressure, battery):
-    if os.path.isfile(DB_PATH) != True:     # Check for database (just in case)
-        log.info("This should not run. Something has gone wrong. Attempting to fix it.")
-        init_db()      
+def write_to_db(time, mac, tempc, humidity, pressure, battery):  
     con, cur = connect_to_db()
     cur.execute('INSERT INTO readings (time, mac, tempc, humidity, pressure, battery) VALUES (?, ?, ?, ?, ?, ?)', (time, mac, tempc, humidity, pressure, battery))
     con.commit()
@@ -81,6 +83,9 @@ def write_to_db(time, mac, tempc, humidity, pressure, battery):
     log.info("Wrote to database successfully.")
         
 if __name__ == "__main__":
+    if TARGET_MAC == None or TARGET_MAC == "":
+        log.critical("TARGET_MAC not set, exiting!")
+        sys.exit(1) 
     try:
         if os.path.isfile(DB_PATH) != True:
             log.error(f"Error: database not found at {DB_PATH}, creating it.")
@@ -88,11 +93,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:       # handle ctrl+c
         log.error("Interrupted.")
-        sys.exit(0)
-    
-
-# sqlite3 data/data.db "SELECT id, time, mac, tempc, humidity, pressure, battery FROM readings ORDER BY id DESC LIMIT 5;"
-
-
-
-    
+        sys.exit(0) 
