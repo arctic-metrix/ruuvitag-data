@@ -4,17 +4,18 @@ Lightweight logger for RuuviTag BLE sensors that stores readings into a local SQ
 
 **Features**
 - Read temperature, humidity, pressure and battery values from RuuviTag sensors via BLE
-- Store readings in `data/data.db` (SQLite)
-- CLI flags for verbosity, single-shot logging, and specifying MAC address
+- Store readings in data/data.db (SQLite)
+- CLI flags for verbosity, single-shot logging, emulation, and specifying MAC address
 
 **Prerequisites**
 - Python 3.8+
 - `ruuvitag_sensor` package (install with `pip install ruuvitag_sensor`)
+- On some systems you may need `bleak` for BLE support: `pip install bleak`
 
 Usage
 -----
 Run the script from the project root. By default the script reads the MAC address from the
-`RUUVITAG_MAC` environment variable. Use `--mac-address` to override.
+`RUUVITAG_MAC` environment variable. Use `--mac-address` (or `-a`) to override.
 
 Basic example (use env var):
 ```bash
@@ -27,10 +28,16 @@ Run once (single reading):
 python main.py -s -a "CF:21:C3:AB:BD:C1"
 ```
 
-Enable verbose or debug logging:
+Emulate readings (generates pseudorandom plausible sensor values):
 ```bash
-python main.py -v -a "CF:21:C3:AB:BD:C1"
-python main.py -d -a "CF:21:C3:AB:BD:C1"
+python main.py -e -d 1000
+```
+
+Examples for logging flags and delay:
+```bash
+python main.py -v -a "CF:21:C3:AB:BD:C1"        # verbose (info)
+python main.py --debug -a "CF:21:C3:AB:BD:C1"   # debug (more verbose)
+python main.py -e -d 2000                        # emulate, delay 2000 ms between readings
 ```
 
 Flags
@@ -38,9 +45,11 @@ Flags
 | Flag | Description |
 | --- | ----------- |
 | `-v`, `--verbose` | Enables verbose logging (`log.info`) |
-| `-d`, `--debug` | Enables debug logging (`log.debug`) |
-| `-s`, `--run-once`| Take a single reading and exit |
+| `-vvvv`, `--debug` | Enables debug logging (`log.debug`) (the CLI uses `-vvvv` as the short form) |
+| `-s`, `--run-once` | Take a single reading and exit |
 | `-a`, `--mac-address [MAC]` | Specify MAC address (overrides `RUUVITAG_MAC`) |
+| `-e`, `--emulate` | Generate plausible pseudorandom readings (use with `-d` for delay) |
+| `-d`, `--delay [MS]` | Delay between readings in milliseconds (required for emulation) |
 
 Environment variables
 ---------------------
@@ -52,10 +61,15 @@ Database
 Readings are stored in `data/data.db` in a table named `readings` with columns:
 `id, time, mac, tempc, humidity, pressure, battery`.
 
+Notes
+-----
+- The script will create the `data` directory and the SQLite database file automatically if missing.
+- When using `--emulate`, specify `--delay` (milliseconds) so the script can sleep between entries.
+
 Troubleshooting
 ---------------
 - If you get an error about `RUUVITAG_MAC` not being set, either export the variable or use `-a`.
-- Use `-d` to see detailed logs when diagnosing BLE/connectivity issues.
+- If BLE scanning fails, ensure your system BLE stack is working and that `bleak` (or your adapter backend) is available.
 
 License
 -------
