@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang='fi'>
+
+<head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>DHT11 data</title>
+    <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+</head>
+
+<body>
+    <h1>DHT11 - lämpötila ja kosteus (SQLite + Flask)</h1>
+    <p>Näytetään viimeiset 60 mittausta. Päivitä sivu nähdäksesi uusimmat.</p>
+    <h2>Kuvaajat</h2>
+    <canvas id='tempChart' width='900' height='250'></canvas>
+    <canvas id='humChart' width='900' height='250'></canvas>
+    <h2>Taulukko</h2>
+    <table border='1' cellpadding='6'>
+        <tr>
+            <th>Time (UTC ISO)</th>
+            <th>MAC</th>
+            <th>Temp (C)</th>
+            <th>Humidity (%)</th>
+            <th>Pressure (hPa)</th>
+            <th>Battery (mV)</th>
+        </tr>
+        {% for r in readings %}
+        <tr>
+            <td>{{ r['time'] }}</td>
+            <td>{{ r['mac'] }}</td>
+            <td>{{ '%.2f'|format(r['tempc']) }}</td>
+            <td>{{ '%.2f'|format(r['humidity']) }}</td>
+            <td>{{ '%.2f'|format(r['pressure']) }}</td>
+            <td>{{ r['battery'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <script>
+        async function loadData() {
+            const res = await fetch('/api/readings?limit=60');
+            return await res.json();
+        }
+        (async () => {
+            const data = await loadData();
+            const labels = data.map(x => x.time);
+            const temps = data.map(x => x.tempc);
+            const hums = data.map(x => x.humidity);
+            new Chart(document.getElementById('tempChart').getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Temp (C)', data: temps, tension: 0.2 }] },
+                options: { responsive: true, scales: { x: { display: false } } }
+            });
+            new Chart(document.getElementById('humChart').getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Humidity (%)', data: hums, tension: 0.2 }] },
+                options: { responsive: true, scales: { x: { display: false } } }
+            });
+        })();
+    </script>
+</body>
+
+</html>
