@@ -44,12 +44,16 @@ except:
     sys.exit(1)     # EXIT_FAILURE
 
 async def main():              
-    time = datetime.now(timezone.utc).isoformat()
     try:
         async for mac, data in RuuviTagSensor.get_data_async(macs=TARGET_MAC):
+            time = datetime.now(timezone.utc).isoformat()
             if args.delay:
                 log.info(f"Sleeping for {int(args.delay)} milliseconds")
                 timer.sleep(int(args.delay)/1000)
+            if any(data[i] is None or data[i] == "" for i in data):
+                log.error("Ruuvitag returned one or more null values. Discarding data...")
+                log.error(data)
+                continue
             tempc = data['temperature']         # Temperature in Celsius
             humidity = data['humidity']         # Humidity in Percentage
             pressure = data['pressure']         # Pressure in hPa
@@ -62,7 +66,6 @@ async def main():
         log.error(f"Error: {e}")
 
 def emulate_main():
-    time = datetime.now(timezone.utc).isoformat()
     if not args.delay:
         log.critical("Please specify a delay using the -d / --delay flags.")
         sys.exit(1)     # EXIT_FAILURE
@@ -70,6 +73,7 @@ def emulate_main():
         while True:
             log.info(f"Sleeping for {int(args.delay)} milliseconds")
             timer.sleep(int(args.delay)/1000)
+            time = datetime.now(timezone.utc).isoformat()
             mac = "FF:FF:FF:FF:FF:FF"                               # Obviously fake MAC for discriminatory purposes
             tempc = round(float(rand.uniform(20,24)),2)             # Temperature in Celsius
             humidity = round(float(rand.uniform(20,24)),2)          # Humidity in Percentage

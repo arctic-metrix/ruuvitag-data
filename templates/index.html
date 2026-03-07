@@ -4,59 +4,53 @@
 <head>
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <title>DHT11 data</title>
-    <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+    <title>RuuviTag WebUI</title>
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/main.css')}}">
+    <script src="{{url_for('.static', filename='js/chart.js')}}"></script>
+    <script src="{{url_for('static', filename='js/main.js')}}"></script>
 </head>
 
 <body>
-    <h1>DHT11 - lämpötila ja kosteus (SQLite + Flask)</h1>
-    <p>Näytetään viimeiset 60 mittausta. Päivitä sivu nähdäksesi uusimmat.</p>
-    <h2>Kuvaajat</h2>
-    <canvas id='tempChart' width='900' height='250'></canvas>
-    <canvas id='humChart' width='900' height='250'></canvas>
-    <h2>Taulukko</h2>
-    <table border='1' cellpadding='6'>
-        <tr>
-            <th>Time (UTC ISO)</th>
-            <th>MAC</th>
-            <th>Temp (C)</th>
-            <th>Humidity (%)</th>
-            <th>Pressure (hPa)</th>
-            <th>Battery (mV)</th>
-        </tr>
-        {% for r in readings %}
-        <tr>
-            <td>{{ r['time'] }}</td>
-            <td>{{ r['mac'] }}</td>
-            <td>{{ '%.2f'|format(r['tempc']) }}</td>
-            <td>{{ '%.2f'|format(r['humidity']) }}</td>
-            <td>{{ '%.2f'|format(r['pressure']) }}</td>
-            <td>{{ r['battery'] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <script>
-        async function loadData() {
-            const res = await fetch('/api/readings?limit=60');
-            return await res.json();
-        }
-        (async () => {
-            const data = await loadData();
-            const labels = data.map(x => x.time);
-            const temps = data.map(x => x.tempc);
-            const hums = data.map(x => x.humidity);
-            new Chart(document.getElementById('tempChart').getContext('2d'), {
-                type: 'line',
-                data: { labels, datasets: [{ label: 'Temp (C)', data: temps, tension: 0.2 }] },
-                options: { responsive: true, scales: { x: { display: false } } }
-            });
-            new Chart(document.getElementById('humChart').getContext('2d'), {
-                type: 'line',
-                data: { labels, datasets: [{ label: 'Humidity (%)', data: hums, tension: 0.2 }] },
-                options: { responsive: true, scales: { x: { display: false } } }
-            });
-        })();
-    </script>
+    <div class="container">
+        <h1>Ruuvitag WebUI</h1>
+        <p class="subtitle">Näytetään viimeiset 60 mittausta. Päivitä sivu nähdäksesi uusimmat.</p>
+        <div class="toggle-group">
+            <button id="toggle-graphs">Näytä/Piilota kuvaajat</button>
+            <button id="toggle-table">Näytä/Piilota taulukko</button>
+        </div>
+        <div id="graphs-section">
+            <h2>Kuvaajat</h2>
+            <canvas id='tempChart' width='900' height='250'></canvas>
+            <canvas id='humChart' width='900' height='250'></canvas>
+        </div>
+        <div id="table-section">
+            <h2>Taulukko</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time (UTC ISO)</th>
+                        <th>MAC</th>
+                        <th>Temp (C)</th>
+                        <th>Humidity (%)</th>
+                        <th>Pressure (hPa)</th>
+                        <th>Battery (mV)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for r in readings %}
+                    <tr>
+                        <td>{{ r['time'] }}</td>
+                        <td>{{ r['mac'] }}</td>
+                        <td>{{ '%.2f'|format(r['tempc']) }}</td>
+                        <td>{{ '%.2f'|format(r['humidity']) }}</td>
+                        <td>{{ '%.2f'|format(r['pressure']) }}</td>
+                        <td>{{ r['battery'] }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 
 </html>
