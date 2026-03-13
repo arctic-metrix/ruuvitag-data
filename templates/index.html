@@ -5,8 +5,9 @@
     <meta charset='utf-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
     <title>RuuviTag WebUI</title>
-    <link rel="stylesheet" href="{{url_for('.static', filename='css/main.css')}}">
-    <script src="{{url_for('.static', filename='js/chart.js')}}"></script>
+    <!-- In Flask every line enclosed by two curly brackets is evaluated by the Python interpreter -->
+    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
+    <script src="{{url_for('static', filename='js/chart.js')}}"></script>
     <script src="{{url_for('static', filename='js/main.js')}}"></script>
 </head>
 
