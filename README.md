@@ -12,6 +12,10 @@ Lightweight logger for RuuviTag BLE sensors that stores readings into a local SQ
 - `ruuvitag_sensor` package (install with `pip install ruuvitag_sensor`)
 - On some systems you may need `bleak` for BLE support: `pip install bleak`
 
+**Install required packages**
+```bash 
+pip install -r requirements.txt
+```
 
 Data Logger Usage
 -----------------
@@ -59,6 +63,14 @@ python server.py -v
 python server.py -vvvv
 ```
 
+You can also specify a host to bind to and a port to use
+```bash
+# Bind to 192.168.6.7:6767
+python server.py -b 192.168.6.7 -p 6767     
+
+# Binds to 0.0.0.0:6767
+python server.py -p 6767     
+```
 #### API Endpoint
 
 - `/api/readings?limit=N` — Returns the latest N readings as JSON. Each reading contains:
@@ -73,7 +85,16 @@ python server.py -vvvv
 
 - The root page `/` displays the latest readings in a table.
 
-Flags
+Flags for server.py:
+-----
+| Flag | Description |
+| --- | ----------- |
+| `-v`, `--verbose` | Enables verbose logging (`log.info`) |
+| `-vvvv`, `--debug` | Enables debug logging (`log.debug`) (the CLI uses `-vvvv` as the short form) |
+| `-b`, `--bind [IP ADDRESS]` | Binds to IP address (defaults to 0.0.0.0 if not set) |
+| `-p`, `--port [PORT]` | Specify port (defaults to 8080) |
+
+Flags for main.py:
 -----
 | Flag | Description |
 | --- | ----------- |
