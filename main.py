@@ -39,16 +39,18 @@ else:
 
 # Determine target MAC, CLI flag takes precedence over environment variable
 candidate_mac = args.mac_address or os.getenv("RUUVITAG_MAC")
+if not args.emulate:
+    if not candidate_mac:
+        log.critical("RUUVITAG_MAC environment variable not found and --mac-address not provided.")
+        sys.exit(1)
 
-if not candidate_mac:
-    log.critical("RUUVITAG_MAC environment variable not found and --mac-address not provided.")
-    sys.exit(1)
+    if not re.match(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$", candidate_mac):
+        log.critical("Invalid MAC-address provided.")
+        sys.exit(1)
 
-if not re.match(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$", candidate_mac):
-    log.critical("Invalid MAC-address provided.")
-    sys.exit(1)
-
-TARGET_MAC = candidate_mac
+    TARGET_MAC = candidate_mac
+else:
+    TARGET_MAC = None
 
 async def main():              
     try:

@@ -1,144 +1,93 @@
-from __future__ import annotations
-
-import json
-import os
 import sqlite3
-import time
+import logging as log
+import argparse
 from pathlib import Path
-from typing import Any
+from flask import Flask, render_template, jsonify, request
+import os
+import sys
+import re
 
-from flask import Flask, jsonify, render_template
-
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / 'ruuvi.sqlite3'
-TEAM_PATH = BASE_DIR / 'team.json'
-
+DB_PATH = Path('data/data.db')
+TEMPLATE_PATH = 'templates/index.html'
 app = Flask(__name__)
+os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")
+parser.add_argument("-vvvv", "--debug", action="store_true", help="Debugging mode")
+parser.add_argument("-b", "--bind", help="Bind address")
+parser.add_argument("-p", "--port", help="Bind port")
+args = parser.parse_args()
+    
+if args.debug:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
+elif args.verbose:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
+else:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.ERROR)
+    
+if args.bind:
+    if not re.match(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", args.bind):
+        log.critical("Valid IP address not provided.")
+        sys.exit(1)
+    else:
+        HOST = args.bind
+else:
+    HOST = "0.0.0.0"
 
-def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+if args.port:
+    if not 1 < int(args.port) < 65535:
+        log.critical("Valid port not provided.")
+        sys.exit(1)
+    else:
+        PORT = int(args.port)
+else:
+    PORT = 8080
+    
+def query_readings(limit: int = 60):
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
 
-
-def ensure_database() -> None:
-    with get_connection() as conn:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS ruuvi_measurements (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ts_unix REAL NOT NULL,
-                mac TEXT NOT NULL,
-                temperature REAL,
-                humidity REAL,
-                pressure REAL,
-                acceleration_x REAL,
-                acceleration_y REAL,
-                acceleration_z REAL,
-                battery_voltage REAL,
-                tx_power INTEGER,
-                movement_counter INTEGER,
-                measurement_sequence_number INTEGER,
-                data_format INTEGER,
-                raw_json TEXT
-            );
-            CREATE INDEX IF NOT EXISTS idx_ruuvi_mac_ts
-            ON ruuvi_measurements(mac, ts_unix);
-            """
-        )
-
-        row_count = conn.execute('SELECT COUNT(*) AS c FROM ruuvi_measurements').fetchone()['c']
-        if row_count == 0:
-            now = int(time.time())
-            seed_rows: list[tuple[Any, ...]] = []
-            for i in range(24):
-                t = now - (23 - i) * 300
-                seed_rows.append(
-                    (
-                        t,
-                        'AA:BB:CC:DD:EE:FF',
-                        round(22.1 + ((i % 5) - 2) * 0.35, 2),
-                        round(41.0 + ((i % 4) - 1) * 1.4, 2),
-                        round(1008.0 + ((i % 6) - 2) * 0.8, 2),
-                        0.0,
-                        0.0,
-                        0.0,
-                        2.91,
-                        4,
-                        i,
-                        i,
-                        5,
-                        json.dumps({'demo': True, 'index': i}),
-                    )
-                )
-
-            conn.executemany(
-                """
-                INSERT INTO ruuvi_measurements (
-                    ts_unix, mac, temperature, humidity, pressure,
-                    acceleration_x, acceleration_y, acceleration_z,
-                    battery_voltage, tx_power, movement_counter,
-                    measurement_sequence_number, data_format, raw_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                seed_rows,
-            )
-        conn.commit()
-
-
-def load_team() -> list[dict[str, Any]]:
-    if not TEAM_PATH.exists():
-        return []
-    with TEAM_PATH.open('r', encoding='utf-8') as f:
-        return json.load(f)
-
+    cur.execute('''
+        SELECT time, mac, tempc, humidity, pressure, battery
+        FROM readings
+        ORDER BY id DESC
+        LIMIT ?
+    ''', (limit,))
+    rows = cur.fetchall()
+    con.close()
+    
+    return [
+        {
+            'ts_unix': r['time'],
+            'mac': r['mac'],
+            'temperature': r['tempc'],
+            'humidity': r['humidity'],
+            'pressure': r['pressure'],
+            'battery_voltage': r['battery'], 
+            'movement_counter': None,
+            'measurement_sequence_number': None
+        }
+        for r in rows
+    ]
 
 @app.route('/')
 def index():
-    return render_template('index.html', team=load_team())
-
+    return render_template('index.html')
 
 @app.route('/api/latest')
 def api_latest():
-    with get_connection() as conn:
-        row = conn.execute(
-            """
-            SELECT ts_unix, mac, temperature, humidity, pressure,
-                   battery_voltage, movement_counter, measurement_sequence_number
-            FROM ruuvi_measurements
-            ORDER BY ts_unix DESC
-            LIMIT 1
-            """
-        ).fetchone()
-
-    if row is None:
+    data = query_readings(limit=1)
+    if not data:
         return jsonify({'error': 'No data found'}), 404
-
-    return jsonify(dict(row))
-
+    return jsonify(data[0])
 
 @app.route('/api/history')
 def api_history():
-    with get_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT ts_unix, mac, temperature, humidity, pressure, battery_voltage
-            FROM ruuvi_measurements
-            ORDER BY ts_unix DESC
-            LIMIT 20
-            """
-        ).fetchall()
+    limit = int(request.args.get('limit', 60))
+    data = query_readings(limit=limit)
+    return jsonify(data)
 
-    result = [dict(row) for row in reversed(rows)]
-    return jsonify(result)
-
-
-@app.route('/api/team')
-def api_team():
-    return jsonify(load_team())
-
-
-if __name__ == '__main__':
-    ensure_database()
-    app.run(debug=True)
+if __name__ == "__main__":    
+    app.run(host=HOST, port=PORT)
