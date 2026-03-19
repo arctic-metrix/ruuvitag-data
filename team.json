@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Aino Esimerkki",
+    "role": "Projektipäällikkö",
+    "email": "aino@example.com",
+    "description": "Vastaa projektin koordinoinnista ja raportoinnista.",
+    "image": "images/member1.svg"
+  },
+  {
+    "name": "Mika Malli",
+    "role": "Ohjelmistokehittäjä",
+    "email": "mika@example.com",
+    "description": "Rakentaa datankeruun ja tietokantayhteydet.",
+    "image": "images/member2.svg"
+  },
+  {
+    "name": "Sara Sensori",
+    "role": "Data-analyytikko",
+    "email": "sara@example.com",
+    "description": "Analysoi RuuviTagin mittausdataa ja visualisoi tulokset.",
+    "image": "images/member3.svg"
+  }
+]

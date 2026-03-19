@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RuuviTag-projekti</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__content container">
+      <div>
+        <p class="eyebrow">IoT-projekti</p>
+        <h1>RuuviTag-datan seuranta</h1>
+        <p class="lead">
+          Tällä sivulla näkyy projektimme uusin RuuviTag-data, viimeisimmät mittaukset
+          sekä projektitiimin jäsenet.
+        </p>
+        <a href="#data" class="button">Siirry dataan</a>
+      </div>
+      <div class="hero__panel">
+        <h2>Projektin tavoite</h2>
+        <p>Keräämme RuuviTagin mittausdataa, tallennamme sen SQLite-tietokantaan ja näytämme arvot selkeällä verkkosivulla.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="data" class="section container">
+      <div class="section__heading">
+        <p class="eyebrow">Sensoridata</p>
+        <h2>Uusimmat arvot</h2>
+      </div>
+
+      <div class="cards" id="latestCards">
+        <article class="card metric-card">
+          <p class="metric-card__label">Lämpötila</p>
+          <p class="metric-card__value" id="temperatureValue">-- °C</p>
+        </article>
+        <article class="card metric-card">
+          <p class="metric-card__label">Kosteus</p>
+          <p class="metric-card__value" id="humidityValue">-- %</p>
+        </article>
+        <article class="card metric-card">
+          <p class="metric-card__label">Ilmanpaine</p>
+          <p class="metric-card__value" id="pressureValue">-- hPa</p>
+        </article>
+        <article class="card metric-card">
+          <p class="metric-card__label">Paristo</p>
+          <p class="metric-card__value" id="batteryValue">-- V</p>
+        </article>
+      </div>
+
+      <div class="grid-two">
+        <article class="card">
+          <div class="card__heading-row">
+            <h3>Viimeisin havainto</h3>
+            <span class="status-dot"></span>
+          </div>
+          <dl class="details-list" id="latestDetails">
+            <div><dt>MAC</dt><dd>--</dd></div>
+            <div><dt>Aikaleima</dt><dd>--</dd></div>
+            <div><dt>Liikelaskuri</dt><dd>--</dd></div>
+            <div><dt>Sekvenssi</dt><dd>--</dd></div>
+          </dl>
+        </article>
+
+        <article class="card">
+          <h3>Lämpötilahistoria</h3>
+          <canvas id="temperatureChart" width="600" height="280" aria-label="Lämpötilakaavio"></canvas>
+        </article>
+      </div>
+
+      <article class="card table-card">
+        <div class="card__heading-row">
+          <h3>Viimeisimmät mittaukset</h3>
+          <button class="button button--secondary" id="refreshButton" type="button">Päivitä data</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Aika</th>
+                <th>MAC</th>
+                <th>Lämpötila</th>
+                <th>Kosteus</th>
+                <th>Ilmanpaine</th>
+                <th>Paristo</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="section section--alt">
+      <div class="container">
+        <div class="section__heading">
+          <p class="eyebrow">Projektitiimi</p>
+          <h2>Toimihenkilöt</h2>
+        </div>
+        <div class="team-grid">
+          {% for member in team %}
+          <article class="card team-card">
+            <img src="{{ url_for('static', filename=member.image) }}" alt="{{ member.name }}" class="team-card__image">
+            <h3>{{ member.name }}</h3>
+            <p class="team-card__role">{{ member.role }}</p>
+            <p>{{ member.description }}</p>
+            <a href="mailto:{{ member.email }}">{{ member.email }}</a>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__content">
+      <p>RuuviTag-projekti • Visual Studio Code • Flask • SQLite</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" rx="48" fill="#EEF4FF"/>
+  <circle cx="400" cy="300" r="120" fill="#B7CCFF"/>
+  <path d="M190 650C220 540 310 480 400 480C490 480 580 540 610 650" fill="#7EA1F7"/>
+  <text x="50%" y="92%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" fill="#173A8A">Jäsen 2</text>
+</svg>
