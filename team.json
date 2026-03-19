@@ -1,22 +1,22 @@
 [
   {
-    "name": "Aino Esimerkki",
+    "name": "Juuso Kekonen",
     "role": "Projektipäällikkö",
-    "email": "aino@example.com",
+    "email": "jkekonen@lapinamk.fi",
     "description": "Vastaa projektin koordinoinnista ja raportoinnista.",
     "image": "images/member1.svg"
   },
   {
-    "name": "Mika Malli",
+    "name": "Aleksi Haimakainen",
     "role": "Ohjelmistokehittäjä",
-    "email": "mika@example.com",
+    "email": "alhaimak@edu.lapinamk.fi",
     "description": "Rakentaa datankeruun ja tietokantayhteydet.",
-    "image": "images/member2.svg"
+    "image": "images/member2.jpeg"
   },
   {
-    "name": "Sara Sensori",
+    "name": "Jaakko Juntunen",
     "role": "Data-analyytikko",
-    "email": "sara@example.com",
+    "email": "jaajuntu@edu.lapinamk.fi",
     "description": "Analysoi RuuviTagin mittausdataa ja visualisoi tulokset.",
     "image": "images/member3.svg"
   }
