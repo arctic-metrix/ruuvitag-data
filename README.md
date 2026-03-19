@@ -12,9 +12,14 @@ Lightweight logger for RuuviTag BLE sensors that stores readings into a local SQ
 - `ruuvitag_sensor` package (install with `pip install ruuvitag_sensor`)
 - On some systems you may need `bleak` for BLE support: `pip install bleak`
 
-Usage
------
-Run the script from the project root. By default the script reads the MAC address from the
+**Install required packages**
+```bash 
+pip install -r requirements.txt
+```
+
+Data Logger Usage
+-----------------
+Run the logger script from the project root. By default the script reads the MAC address from the
 `RUUVITAG_MAC` environment variable. Use `--mac-address` (or `-a`) to override.
 
 Basic example (use env var):
@@ -40,7 +45,56 @@ python main.py --debug -a "CF:21:C3:AB:BD:C1"   # debug (more verbose)
 python main.py -e -d 2000                        # emulate, delay 2000 ms between readings
 ```
 
-Flags
+Web Server Usage
+----------------
+You can view and access the logged data via a simple Flask web server:
+
+```bash
+python server.py
+```
+
+By default, the server runs on all interfaces at port 8080:
+- Web UI: http://127.0.0.1:8080/
+- API: http://127.0.0.1:8080/api/readings?limit=60
+
+You can use the `-v` or `-vvvv` flags for verbose or debug logging:
+```bash
+python server.py -v
+python server.py -vvvv
+```
+
+You can also specify a host to bind to and a port to use
+```bash
+# Bind to 192.168.6.7:6767
+python server.py -b 192.168.6.7 -p 6767     
+
+# Binds to 0.0.0.0:6767
+python server.py -p 6767     
+```
+#### API Endpoint
+
+- `/api/readings?limit=N` — Returns the latest N readings as JSON. Each reading contains:
+	- `time`: ISO timestamp
+	- `mac`: Sensor MAC address
+	- `tempc`: Temperature in Celsius
+	- `humidity`: Relative humidity (%)
+	- `pressure`: Pressure (hPa)
+	- `battery`: Battery voltage (mV)
+
+#### Web UI
+
+- The root page `/` displays the latest readings in a table.
+
+Flags for server.py:
+-----
+| Flag | Description |
+| --- | ----------- |
+| `-v`, `--verbose` | Enables verbose logging (`log.info`) |
+| `-vvvv`, `--debug` | Enables debug logging (`log.debug`) (the CLI uses `-vvvv` as the short form) |
+| `-b`, `--bind [IP ADDRESS]` | Binds to IP address (defaults to 0.0.0.0 if not set) |
+| `-p`, `--port [PORT]` | Specify port (defaults to 8080) |
+
+Flags for main.py:
 -----
 | Flag | Description |
 | --- | ----------- |
