@@ -1,6 +1,6 @@
-function formatDate(unixTs) {
-  const date = new Date(unixTs * 1000);
-  return date.toLocaleString('fi-FI');
+function formatDate(val) {
+  const date = typeof val === 'string' ? new Date(val.replace(' ', 'T')) : new Date(val * 1000);
+  return isNaN(date) ? val : date.toLocaleString('fi-FI');
 }
 
 function setText(id, value) {
@@ -15,7 +15,7 @@ async function fetchJson(url) {
   }
   return res.json();
 }
-
+ 
 function updateLatest(latest) {
   setText('temperatureValue', `${Number(latest.temperature ?? 0).toFixed(1)} °C`);
   setText('humidityValue', `${Number(latest.humidity ?? 0).toFixed(1)} %`);
@@ -28,11 +28,6 @@ function updateLatest(latest) {
     ['Liikelaskuri', latest.movement_counter ?? '--'],
     ['Sekvenssi', latest.measurement_sequence_number ?? '--']
   ];
-
-  const details = document.getElementById('latestDetails');
-  details.innerHTML = detailPairs
-    .map(([key, value]) => `<div><dt>${key}</dt><dd>${value}</dd></div>`)
-    .join('');
 }
 
 function updateTable(rows) {
@@ -53,12 +48,13 @@ function updateTable(rows) {
     .join('');
 }
 
-function drawTemperatureChart(rows) {
-  const canvas = document.getElementById('temperatureChart');
+function drawChart(rows, canvasId, property, unit, color, offset) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
-  const padding = 36;
+  const padding = 50; 
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = '#fcfdff';
@@ -71,9 +67,9 @@ function drawTemperatureChart(rows) {
     return;
   }
 
-  const values = rows.map(r => Number(r.temperature ?? 0));
-  const min = Math.min(...values) - 0.5;
-  const max = Math.max(...values) + 0.5;
+  const values = rows.map(r => Number(r[property] ?? 0));
+  const min = Math.min(...values) - offset;
+  const max = Math.max(...values) + offset;
   const range = max - min || 1;
 
   ctx.strokeStyle = '#d8e0eb';
@@ -85,13 +81,13 @@ function drawTemperatureChart(rows) {
   ctx.lineTo(padding, height - padding);
   ctx.stroke();
 
-  ctx.strokeStyle = '#2155cd';
+  ctx.strokeStyle = color;
   ctx.lineWidth = 3;
   ctx.beginPath();
 
   rows.forEach((row, index) => {
     const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
-    const y = height - padding - ((Number(row.temperature ?? 0) - min) / range) * (height - padding * 2);
+    const y = height - padding - ((Number(row[property] ?? 0) - min) / range) * (height - padding * 2);
     if (index === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
@@ -99,10 +95,18 @@ function drawTemperatureChart(rows) {
 
   ctx.fillStyle = '#5f6b7a';
   ctx.font = '12px Arial';
-  ctx.fillText(`${max.toFixed(1)} °C`, 8, padding);
-  ctx.fillText(`${min.toFixed(1)} °C`, 8, height - padding);
+  const decimals = property === 'battery_voltage' ? 2 : 1;
+  ctx.fillText(`${max.toFixed(decimals)} ${unit}`, 5, padding);
+  ctx.fillText(`${min.toFixed(decimals)} ${unit}`, 5, height - padding);
   ctx.fillText('Vanhempi', padding, height - 10);
   ctx.fillText('Uusin', width - 70, height - 10);
+}
+
+function drawCharts(rows) {
+  drawChart(rows, 'temperatureChart', 'temperature', '°C', '#2155cd', 0.5);
+  drawChart(rows, 'humidityChart', 'humidity', '%', '#2ca02c', 1.0);
+  drawChart(rows, 'pressureChart', 'pressure', 'hPa', '#d62728', 1.0);
+  drawChart(rows, 'batteryChart', 'battery_voltage', 'mV', '#ff7f0e', 0.1);
 }
 
 async function loadData() {
@@ -113,7 +117,7 @@ async function loadData() {
 
   updateLatest(latest);
   updateTable(history);
-  drawTemperatureChart(history);
+  drawCharts(history);
 }
 
 document.getElementById('refreshButton').addEventListener('click', () => {

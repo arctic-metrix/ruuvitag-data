@@ -53,22 +53,21 @@
 
       <div class="grid-two">
         <article class="card">
-          <div class="card__heading-row">
-            <h3>Viimeisin havainto</h3>
-            <span class="status-dot"></span>
-          </div>
-          <dl class="details-list" id="latestDetails">
-            <div><dt>MAC</dt><dd>--</dd></div>
-            <div><dt>Aikaleima</dt><dd>--</dd></div>
-            <div><dt>Liikelaskuri</dt><dd>--</dd></div>
-            <div><dt>Sekvenssi</dt><dd>--</dd></div>
-          </dl>
-        </article>
-
-        <article class="card">
           <h3>Lämpötilahistoria</h3>
           <canvas id="temperatureChart" width="600" height="280" aria-label="Lämpötilakaavio"></canvas>
         </article>
+        <article class="card">
+            <h3>Ilmankosteushistoria</h3>
+            <canvas id="humidityChart" width="600" height="280" aria-label="Ilmankosteuskaavio"></canvas>
+          </article>
+          <article class="card">
+            <h3>Ilmanpainehistoria</h3>
+            <canvas id="pressureChart" width="600" height="280" aria-label="Ilmanpainekaavio"></canvas>
+          </article>
+          <article class="card">
+            <h3>Pariston varaushistoria</h3>
+            <canvas id="batteryChart" width="600" height="280" aria-label="Akkukaavio"></canvas>
+          </article>
       </div>
 
       <article class="card table-card">

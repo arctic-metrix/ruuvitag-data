@@ -99,7 +99,7 @@ img { max-width: 100%; display: block; }
 }
 .grid-two {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin: 1rem 0;
 }
