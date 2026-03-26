@@ -6,9 +6,12 @@ from flask import Flask, render_template, jsonify, request
 import os
 import sys
 import re
+from typing import Any
+import json
 
 DB_PATH = Path('data/data.db')
 TEMPLATE_PATH = 'templates/index.html'
+TEAM_PATH = Path('team.json')
 app = Flask(__name__)
 os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))
 
@@ -69,25 +72,36 @@ def query_readings(limit: int = 60):
             'movement_counter': None,
             'measurement_sequence_number': None
         }
-        for r in rows
+        for r in reversed(rows)
     ]
-
+    
+def load_team() -> list[dict[str, Any]]:
+    if not TEAM_PATH.exists():
+        return []
+    with TEAM_PATH.open('r', encoding='utf-8') as f:
+        return json.load(f)
+    
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', team=load_team())
+
 
 @app.route('/api/latest')
 def api_latest():
     data = query_readings(limit=1)
     if not data:
         return jsonify({'error': 'No data found'}), 404
-    return jsonify(data[0])
+    return jsonify(data[-1])
 
 @app.route('/api/history')
 def api_history():
     limit = int(request.args.get('limit', 60))
     data = query_readings(limit=limit)
     return jsonify(data)
+
+@app.route('/api/team')
+def api_team():
+    return jsonify(load_team())
 
 if __name__ == "__main__":    
     app.run(host=HOST, port=PORT)

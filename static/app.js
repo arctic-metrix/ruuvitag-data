@@ -120,8 +120,28 @@ async function loadData() {
   drawCharts(history);
 }
 
-document.getElementById('refreshButton').addEventListener('click', () => {
+function pollData() {
+  // Stop running if the toggle was switched off
+  if (live === 0) return; 
+  
   loadData().catch(err => alert(err.message));
+  
+  // Schedule the next execution in 2000ms
+  timeoutId = setTimeout(pollData, 2000);
+}
+
+document.getElementById('refreshButton').addEventListener('click', () => {
+  if (live === 1) {
+    live = 0;
+    document.getElementById('refreshButton').innerHTML = "Aloita live-päivitys"
+    clearTimeout(timeoutId); // Cancel any pending timeout immediately
+  } else {
+    live = 1;
+    document.getElementById('refreshButton').innerHTML = "Lopeta live-päivitys"
+    pollData(); // Start the polling cycle
+  }
 });
 
+let live = 0;
+let timeoutId;
 loadData().catch(err => alert(err.message));
