@@ -203,7 +203,7 @@ function setupTeamPopups(team) {
       
       if (appUrl.endsWith('.mp4')) {
         modalContent.innerHTML = `
-          <video style="width: 100%; height: 100%; background: #000; display: block;" controls autoplay>
+          <video style="width: 100%; height: 100%; background: #000; display: block;" controls autoplay muted>
             <source src="${appUrl}" type="video/mp4">
             Selaimesi ei tue videota.
           </video>`;
