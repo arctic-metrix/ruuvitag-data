@@ -103,7 +103,7 @@
         <div class="team-grid">
           {% for member in team %}
           <article class="card team-card">
-            <img src="{{ url_for('static', filename=member.image) }}" alt="{{ member.name }}" class="team-card__image">
+            <img id="{{ member.imgid }}" src="{{ url_for('static', filename=member.image) }}" alt="{{ member.name }}" class="team-card__image">
             <h3>{{ member.name }}</h3>
             <p class="team-card__role">{{ member.role }}</p>
             <p>{{ member.description }}</p>
