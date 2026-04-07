@@ -173,3 +173,15 @@ th { color: var(--muted); font-size: 0.95rem; }
     grid-template-columns: 1fr;
   }
 }
+
+.watermark-logo {
+  position: fixed;      
+  top: 10px;            
+  left: 35px;           
+  width: 120px;         
+  opacity: 0.5;         
+  z-index: 9999;        
+  pointer-events: none; 
+  border-radius: 100px;
+  border: 2px solid black;
+}
