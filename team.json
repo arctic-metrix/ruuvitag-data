@@ -6,7 +6,7 @@
     "email": "jkekonen@lapinamk.fi",
     "description": "Vastaa projektin koordinoinnista ja raportoinnista.",
     "image": "images/member1.jpeg",
-    "application": "static/member1.mp4"
+    "application": "static/applications/member1.mp4"
 
   },
   {
@@ -16,7 +16,7 @@
     "email": "alhaimak@edu.lapinamk.fi",
     "description": "Rakentaa datankeruun ja tietokantayhteydet.",
     "image": "images/member2.jpeg",
-    "application": "static/member2.pdf"
+    "application": "static/applications/member2.pdf"
    },
   {
     "name": "Jaakko Juntunen",
@@ -25,6 +25,6 @@
     "email": "jaajuntu@edu.lapinamk.fi",
     "description": "Analysoi RuuviTagin mittausdataa ja visualisoi tulokset.",
     "image": "images/member3.jpeg",
-    "application": "static/member3.pdf"
+    "application": "static/applications/member3.pdf"
   }
 ]

@@ -99,6 +99,7 @@
         <div class="section__heading">
           <p class="eyebrow">Projektitiimi</p>
           <h2>Toimihenkilöt</h2>
+          <p>Klikkaamalla kuvia pääset katsomaan projektin osakkaiden hakemuksia.</p>
         </div>
         <div class="team-grid">
           {% for member in team %}
@@ -122,5 +123,12 @@
   </footer>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <div id="teamModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center;">
+  <div style="background-color: #fff; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; position: relative;">
+    <span id="closeModal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: #333;">&times;</span>
+    <h2 id="modalTitle" style="margin-top: 0; color: #333;">Työnäyte</h2>
+    <div id="modalContent" style="margin-top: 15px;"></div>
+  </div>
+</div>
 </body>
 </html>

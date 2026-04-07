@@ -110,14 +110,18 @@ function drawCharts(rows) {
 }
 
 async function loadData() {
-  const [latest, history] = await Promise.all([
+  const [latest, history, team] = await Promise.all([
     fetchJson('/api/latest'),
-    fetchJson('/api/history')
+    fetchJson('/api/history'),
+    fetchJson('/api/team')
   ]);
 
   updateLatest(latest);
   updateTable(history);
   drawCharts(history);
+  
+  // Initialize dynamic popups using the fetched team.json data
+  setupTeamPopups(team); 
 }
 
 function pollData() {
@@ -141,6 +145,79 @@ document.getElementById('refreshButton').addEventListener('click', () => {
     pollData(); // Start the polling cycle
   }
 });
+
+function setupTeamPopups(team) {
+  let modal = document.getElementById('teamModal');
+  
+  // If the old modal exists from a previous load, remove it to force recreation with new styles
+  if (modal) {
+    modal.remove();
+  }
+  
+  // Create the new properly sized modal
+  modal = document.createElement('div');
+  modal.id = 'teamModal';
+  // Outer overlay takes up full screen
+  modal.style.cssText = 'display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center;';
+  
+  // Inner container is exactly 75vw and 75vh and uses flex column
+  modal.innerHTML = `
+    <div style="background-color: #fff; padding: 20px; border-radius: 8px; width: 75vw; height: 75vh; position: relative; display: flex; flex-direction: column;">
+      <span id="closeModal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: #333; z-index: 10;">&times;</span>
+      <h2 id="modalTitle" style="margin-top: 0; margin-bottom: 10px; color: #333; flex-shrink: 0;">Työnäyte</h2>
+      
+      <!-- modalContent MUST have flex: 1 and min-height: 0 to force it to fill the remaining 75vh -->
+      <div id="modalContent" style="flex: 1; min-height: 0; width: 100%; overflow: hidden; display: flex;"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const modalTitle = document.getElementById('modalTitle');
+  const modalContent = document.getElementById('modalContent');
+  const closeBtn = document.getElementById('closeModal');
+
+  if (closeBtn) {
+    closeBtn.onclick = () => { modal.style.display = 'none'; };
+  }
+  
+  window.onclick = (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+  };
+
+  team.forEach(member => {
+    const imgElement = document.getElementById(member.imgid);
+    if (!imgElement || !member.application) return;
+
+    imgElement.style.cursor = 'pointer';
+    imgElement.onclick = () => {
+      const appUrl = '/' + member.application; 
+      
+      // Mobile logic
+      if (window.innerWidth <= 768) {
+        window.open(appUrl, '_blank');
+        return; 
+      }
+
+      modalTitle.textContent = `${member.name} - Työnäyte`;
+      modalContent.innerHTML = ''; 
+      
+      if (appUrl.endsWith('.mp4')) {
+        modalContent.innerHTML = `
+          <video style="width: 100%; height: 100%; background: #000; display: block;" controls autoplay>
+            <source src="${appUrl}" type="video/mp4">
+            Selaimesi ei tue videota.
+          </video>`;
+      } else if (appUrl.endsWith('.pdf')) {
+        modalContent.innerHTML = `
+          <iframe src="${appUrl}#toolbar=0&navpanes=0&scrollbar=0" style="width: 100%; height: 100%; border: none; display: block;"></iframe>`;
+      } else {
+        modalContent.innerHTML = `<a href="${appUrl}" target="_blank">Avaa tiedosto</a>`;
+      }
+
+      modal.style.display = 'flex';
+    };
+  });
+}
 
 let live = 0;
 let timeoutId;

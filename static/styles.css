@@ -152,6 +152,7 @@ th { color: var(--muted); font-size: 0.95rem; }
   gap: 1rem;
 }
 .team-card__image {
+  -webkit-filter: brightness(100%);
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
@@ -159,6 +160,17 @@ th { color: var(--muted); font-size: 0.95rem; }
   margin-bottom: 1rem;
   background: var(--panel-soft);
 }
+
+.team-card__image:hover {
+    -webkit-filter: brightness(70%);
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    -ms-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    scale:1.05;
+}
+
 .team-card__role { color: var(--accent); font-weight: 700; margin-top: -0.4rem; }
 .footer {
   padding: 1.5rem 0 3rem;
@@ -185,3 +197,4 @@ th { color: var(--muted); font-size: 0.95rem; }
   border-radius: 100px;
   border: 2px solid black;
 }
+
