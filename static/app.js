@@ -134,6 +134,7 @@ function pollData() {
   timeoutId = setTimeout(pollData, 2000);
 }
 
+
 document.getElementById('refreshButton').addEventListener('click', () => {
   if (live === 1) {
     live = 0;
