@@ -1,4 +1,4 @@
-sudo apt install python3-venv python3-pip nginx gunicorn supervisor
+sudo apt install git python3-venv python3-pip nginx gunicorn supervisor -y
 cd /home/${USER}
 git clone https://github.com/arctic-metrix/ruuvitag-data.git
 cd ruuvitag-data
@@ -8,10 +8,11 @@ pip install -r requirements.txt
 
 read -p "Enter MAC-address: " MAC_ADDRESS
 
+sudo systemctl enable supervisor
 # Removed quotes from EOF so ${USER} and ${MAC_ADDRESS} expand correctly
-# Changed filename to main.conf to avoid overwriting
+# Changed filename to main.py.conf to avoid overwriting
 # Fixed hardcoded 'arctic-metrix' path to use ${USER}
-cat << EOF | sudo tee /etc/supervisor/conf.d/main.conf
+cat << EOF | sudo tee /etc/supervisor/conf.d/main.py.conf
 [program:main]
 directory=/home/${USER}/ruuvitag-data
 command=/home/${USER}/ruuvitag-data/.env/bin/python3 /home/${USER}/ruuvitag-data/main.py -a ${MAC_ADDRESS}
@@ -23,7 +24,7 @@ EOF
 
 # Removed quotes from EOF so ${USER} expands correctly
 # Left filename as app.conf
-cat << EOF | sudo tee /etc/supervisor/conf.d/app.conf
+cat << EOF | sudo tee /etc/supervisor/conf.d/app.py.conf
 [program:app]
 directory=/home/${USER}/ruuvitag-data
 command=/home/${USER}/ruuvitag-data/.env/bin/gunicorn --bind 0.0.0.0:8080 app:app
@@ -55,4 +56,6 @@ EOF
 
 sudo ln -s /etc/nginx/sites-available/ruuvitag-data /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl enable nginx
 sudo systemctl restart nginx
