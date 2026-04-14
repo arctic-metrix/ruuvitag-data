@@ -134,7 +134,7 @@ function pollData() {
   timeoutId = setTimeout(pollData, 2000);
 }
 
-
+  
 document.getElementById('refreshButton').addEventListener('click', () => {
   if (live === 1) {
     live = 0;
@@ -146,6 +146,17 @@ document.getElementById('refreshButton').addEventListener('click', () => {
     pollData(); // Start the polling cycle
   }
 });
+
+document.getElementById('hideButton').addEventListener("click", () => {
+  if (document.getElementById("table-wrapper").style.display == "none") {
+      document.getElementById("table-wrapper").style.display = "block";
+      document.getElementById('hideButton').innerHTML = "Piilota"
+    } else {
+      document.getElementById("table-wrapper").style.display = "none";
+      document.getElementById('hideButton').innerHTML = "Näytä"
+    }
+  });
+
 
 function setupTeamPopups(team) {
   let modal = document.getElementById('teamModal');
