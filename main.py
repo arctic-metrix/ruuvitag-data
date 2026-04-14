@@ -6,11 +6,35 @@ from pathlib import Path
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 import sys
 import logging as log
+import argparse
 import secrets
 import time as timer
 import re
 
 os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))                                # Set working directory to script location
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")                                # -v / --verbose for verbose logging
+parser.add_argument("-vvvv", "--debug", action="store_true", help="Debugging mode")                             # -vvvv / --debug for debug logging
+parser.add_argument("-s", "--run-once", action="store_true", help="Log data once.")                             # -s / --run-once for single log
+parser.add_argument("-a", "--mac-address", help="Use specific MAC-address")                                     # -a / --mac-address for specifying a MAC-address without environment variables (takes precedence over environment variables)
+parser.add_argument("-e", "--emulate", action="store_true", help="Generate plausible pseudorandom readings")    # -e / --emulate for generating pseudorandom data that could be plausible readings (takes precedence over flag specified MAC and environment variables)
+parser.add_argument("-d", "--delay", help="Specify delay between readings (in milliseconds)")                    # -d / --delay for specifying a time between readings in milliseconds 
+args = parser.parse_args()
+
+DB_PATH = Path('data/data.db')                  # Database location
+os.environ["RUUVI_BLE_ADAPTER"] = "bleak"       # BLE adapter
+rand = secrets.SystemRandom()                   # Random number generator for emulation
+
+# Configure logging once based on args
+if args.debug:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
+    log.info("Debug mode enabled.")
+elif args.verbose:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
+    log.info("Verbose mode enabled.")
+else:
+    log.basicConfig(format='%(levelname)s: %(message)s', level=log.ERROR)
 
 
 # Determine target MAC, CLI flag takes precedence over environment variable
@@ -27,14 +51,6 @@ if not args.emulate:
     TARGET_MAC = candidate_mac
 else:
     TARGET_MAC = None
-
-if bool(args.emulate) != True and TARGET_MAC == None or TARGET_MAC == "":
-    log.critical("TARGET_MAC not set, exiting!")
-    sys.exit(1) # EXIT_FAILURE
-    
-DB_PATH = Path('data/data.db')                  # Database location
-os.environ["RUUVI_BLE_ADAPTER"] = "bleak"       # BLE adapter
-rand = secrets.SystemRandom()                   # Random number generator for emulation
 
 async def main():              
     try:
@@ -117,25 +133,9 @@ def write_to_db(time, mac, tempc, humidity, pressure, battery):
     log.info("Wrote to database successfully.")
         
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")                                # -v / --verbose for verbose logging
-    parser.add_argument("-vvvv", "--debug", action="store_true", help="Debugging mode")                             # -vvvv / --debug for debug logging
-    parser.add_argument("-s", "--run-once", action="store_true", help="Log data once.")                             # -s / --run-once for single log
-    parser.add_argument("-a", "--mac-address", help="Use specific MAC-address")                                     # -a / --mac-address for specifying a MAC-address without environment variables (takes precedence over environment variables)
-    parser.add_argument("-e", "--emulate", action="store_true", help="Generate plausible pseudorandom readings")    # -e / --emulate for generating pseudorandom data that could be plausible readings (takes precedence over flag specified MAC and environment variables)
-    parser.add_argument("-d", "--delay", help="Specify delay between readings (in milliseconds)")                    # -d / --delay for specifying a time between readings in milliseconds 
-    args = parser.parse_args()
-
-    # Configure logging once based on args
-    if args.debug:
-        log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
-        log.info("Debug mode enabled.")
-    elif args.verbose:
-        log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
-        log.info("Verbose mode enabled.")
-    else:
-        log.basicConfig(format='%(levelname)s: %(message)s', level=log.ERROR)
+    if bool(args.emulate) != True and TARGET_MAC == None or TARGET_MAC == "":
+        log.critical("TARGET_MAC not set, exiting!")
+        sys.exit(1) # EXIT_FAILURE
 
     try:
         if os.path.isfile(DB_PATH) != True:

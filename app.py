@@ -1,6 +1,5 @@
 import sqlite3
 import logging as log
-import argparse
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 import os
@@ -14,38 +13,6 @@ TEMPLATE_PATH = 'templates/index.html'
 TEAM_PATH = Path('team.json')
 app = Flask(__name__)
 os.chdir(os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))))
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")
-parser.add_argument("-vvvv", "--debug", action="store_true", help="Debugging mode")
-parser.add_argument("-b", "--bind", help="Bind address")
-parser.add_argument("-p", "--port", help="Bind port")
-args = parser.parse_args()
-    
-if args.debug:
-    log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
-elif args.verbose:
-    log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
-else:
-    log.basicConfig(format='%(levelname)s: %(message)s', level=log.ERROR)
-    
-if args.bind:
-    if not re.match(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", args.bind):
-        log.critical("Valid IP address not provided.")
-        sys.exit(1)
-    else:
-        HOST = args.bind
-else:
-    HOST = "0.0.0.0"
-
-if args.port:
-    if not 1 < int(args.port) < 65535:
-        log.critical("Valid port not provided.")
-        sys.exit(1)
-    else:
-        PORT = int(args.port)
-else:
-    PORT = 8080
     
 def query_readings(limit: int = 60):
     con = sqlite3.connect(DB_PATH)
@@ -104,4 +71,36 @@ def api_team():
     return jsonify(load_team())
 
 if __name__ == "__main__":    
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose mode")
+    parser.add_argument("-vvvv", "--debug", action="store_true", help="Debugging mode")
+    parser.add_argument("-b", "--bind", help="Bind address")
+    parser.add_argument("-p", "--port", help="Bind port")
+    args = parser.parse_args()
+    if args.debug:
+        log.basicConfig(format='%(levelname)s: %(message)s', level=log.DEBUG)
+    elif args.verbose:
+        log.basicConfig(format='%(levelname)s: %(message)s', level=log.INFO)
+    else:
+        log.basicConfig(format='%(levelname)s: %(message)s', level=log.ERROR)
+    
+    if args.bind:
+        if not re.match(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$", args.bind):
+            log.critical("Valid IP address not provided.")
+            sys.exit(1)
+        else:
+            HOST = args.bind
+    else:
+        HOST = "0.0.0.0"
+
+    if args.port:
+        if not 1 < int(args.port) < 65535:
+            log.critical("Valid port not provided.")
+            sys.exit(1)
+        else:
+            PORT = int(args.port)
+    else:
+        PORT = 8080
+        
     app.run(host=HOST, port=PORT)
