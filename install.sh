@@ -1,3 +1,18 @@
+# Terminate if the user is root (UID 0)
+if [ "$EUID" -eq 0 ]; then
+    echo "Error: Please do not run this script as root."
+    echo "Run it as a regular user with sudo privileges."
+    exit 1
+fi
+
+# Check if the current user has sudo privileges
+# This will prompt for a password if the user's sudo timestamp has expired
+if ! sudo -v &> /dev/null; then
+    echo "Error: User ${USER} does not have sudo privileges, which are required to run this script."
+    exit 1
+fi
+
+sudo apt update
 sudo apt install git python3-venv python3-pip nginx gunicorn supervisor -y
 cd /home/${USER}
 git clone https://github.com/arctic-metrix/ruuvitag-data.git
@@ -9,9 +24,6 @@ pip install -r requirements.txt
 read -p "Enter MAC-address: " MAC_ADDRESS
 
 sudo systemctl enable supervisor
-# Removed quotes from EOF so ${USER} and ${MAC_ADDRESS} expand correctly
-# Changed filename to main.py.conf to avoid overwriting
-# Fixed hardcoded 'arctic-metrix' path to use ${USER}
 cat << EOF | sudo tee /etc/supervisor/conf.d/main.py.conf
 [program:main]
 directory=/home/${USER}/ruuvitag-data
@@ -22,8 +34,6 @@ stderr_logfile=/var/log/main.err.log
 stdout_logfile=/var/log/main.out.log
 EOF
 
-# Removed quotes from EOF so ${USER} expands correctly
-# Left filename as app.conf
 cat << EOF | sudo tee /etc/supervisor/conf.d/app.py.conf
 [program:app]
 directory=/home/${USER}/ruuvitag-data
